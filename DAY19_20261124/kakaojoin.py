@@ -1,0 +1,131 @@
+# kakaojoin.py
+
+import sqlite3 as db
+import streamlit as st
+
+#1. 저장소 만들기
+
+db저장소 = db.connect("kakao.db")
+#2. 조작도구 만들기
+마우스 = db저장소.cursor()
+
+# 3. 카카오톡 회원가입 페이지만든다.
+#  아이디,비밀번호,이름,전화번호는 꼭 입력한다.
+
+# 칸마다 3질문
+# 이 칸으로 정확히 한 사람을 가리키나?
+# 이 칸이 비어있으면 안되나?
+# 이 칸이 다른사람이랑 겹치면 안되나?
+
+# 데이터베이스에서 테이블을 관리하기 위해서
+# 카톡 비유 친구,쇼핑,선물하기 등등
+# 회원 테이블을 같이 쓴다.
+# 오픈채팅탭 개발자가 비어있는값을 확인하는 if문
+# 까먹음?
+
+# 제약 조건 종류
+# primary key (대표키)
+# not null
+#   - 이 칸은 비우면 안됨!
+# unique
+#  - 이 칸은 겹치면 안된다(중복데이터X)
+# 규칙은 칸마다 다르다
+
+# 대표키를 작성할 때는 대부분 숫자로 작성 (uuid)
+# 문자는 중복이 발생할 확률이 높음!
+
+마우스.execute("""
+    create table if not exists members(
+        회원번호   integer  primary key  autoincrement,
+        아이디     text     not null  unique,
+        비밀번호    text    not null,
+        이름       text     not null,
+        전화번호    text    not null  unique
+    )
+""")
+
+# not null 만 컬럼에 지정하면 값을 필수!
+#  중복되는 값들이 들어올 수있다.
+# unique 로 중복되면 안 되는 칸들에 추가 설정한다!
+# 모든 데이터를 저장하는 테이블에 대표 번호
+# DB관리자(성능,백업,튜닝,권한,계정관리) - DBA
+# OCP 자격증
+# 제약조건을 꼭 확인한다.
+
+st.title("카카오 회원가입")
+아이디 = st.text_input("아이디").strip()
+비밀번호 = st.text_input("비밀번호", type="password").strip()
+이름 = st.text_input("이름").strip()
+전화번호 = st.text_input("전화번호 (예: 010-1234-5678)").strip()
+# kakaocoupon.py
+
+# 내가만든 모듈 가져오기
+import my
+
+# my하는 모듈 안에 스트림릿 타이틀!
+my.st.title("쿠폰 보내기")
+
+# 테이블 제약조건 넣어서 생성하기!
+# 테이블명 : coupons
+
+# 선물하기에서 선물을 보내면 선물번호가
+# 자동으로 생긴다.
+# 보내는사람 아이디,받는 사람아이디, 전화번호
+# 상품 이름은 꼭! 있어야된다.
+# 받는 사람은 쿠폰 번호로 상품을 받는다
+# 쿠폰번호는 절대 겹치면 안되고 값이 꼭!
+# 있어야된다.
+# 카드 메서지는 안 써도 된다.
+
+# 데이터 타입, 제약조건, 생성하는 코드
+# 필수 : 보내는사람아이디,받는아아디
+#        받는사람의전화번호(중복)
+#        상품이름,쿠폰번호(중복)
+# 선택 : 카드메시지
+
+# 혹시 쿠폰 보내기를 하려면 로그인이 필요하다
+# 내가 로그인이 되어있니?
+#  친구목록을 조회해야되니 로그인확인
+
+db저장소 = my.db.connect("kakao.db")
+#2. 조작도구 만들기
+마우스 = db저장소.cursor()
+
+
+my.st.subheader("로그인 실습")
+로그인탭,가입탭 = my.st.tabs(["로그인","회원가입"])
+
+# 로그인탭을 누르면 로그인할 수있는 화면
+with 로그인탭:
+    # 사용자 입력받음
+    아이디 = my.st.text_input("아이디", key="로그인_아이디").strip()
+    비밀번호 = my.st.text_input("비밀번호", type="password", key="로그인_비번").strip()
+
+    # 디비 조회
+    마우스.execute(f"""
+        select
+            아이디
+        from
+            members
+        where
+            아이디 = '{아이디}'
+    """)
+    회원 = 마우스.fetchone()
+    my.st.write("찾은 아이디:" , 회원)
+
+# 가입탭 누르면 가입창이 뜬다
+with 가입탭:
+    pass
+# 입력값들은 공백이 들어가면 문제가 발생할 수있다!
+# varchar 타입은 글자수를 제한할 수있다.
+# not null은 값을 무조건 가져와라! 값이 비면 안된다!
+# 글자수 제한과는 무관하다!
+if st.button("가입하기"):
+    마우스.execute(f"""
+        insert into
+            members(아이디,비밀번호,이름,전화번호)
+        values
+            ('{아이디}','{비밀번호}','{이름}','{전화번호}')
+    """)
+
+    db저장소.commit()
